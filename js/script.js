@@ -1,5 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------
+    // 0. Configuración de Firebase
+    // ------------------------------------------
+    const firebaseConfig = {
+        apiKey: "AIzaSyDhq_I_l6Yl9a4Kgwlu5EOJCyiyXhn4Wsc",
+        authDomain: "lusso-store.firebaseapp.com",
+        projectId: "lusso-store",
+        storageBucket: "lusso-store.firebasestorage.app",
+        messagingSenderId: "959207107575",
+        appId: "1:959207107575:web:5f1b171a7517d30ab45cf2",
+        measurementId: "G-5HKK58DHGD"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+    // ------------------------------------------
     // 1. Variables Globales y Estado Inicial
     // ------------------------------------------
     const ADMIN_PASSWORD = "luso_admin"; // Contraseña simple para el demo
@@ -50,10 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------
 
     /**
-     * Guarda el array de productos actual en localStorage.
+     * Guarda el array de productos actual Firebase Realtime Database.
      */
     const saveProducts = () => {
-        localStorage.setItem('lusoProducts', JSON.stringify(products));
+        db.ref('products').set(products);
     };
 
     /**
@@ -179,43 +196,51 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Maneja el guardado/actualización del producto.
      */
-    const handleSaveProduct = () => {
+    const handleSaveProduct = async () => {
         const name = $productName.value.trim();
-    const category = $productCategory.value;
-    const price = parseFloat($productPrice.value);
-    const stock = parseInt($productStock.value);
-    const sizes = Array.from(document.querySelectorAll('.size-btn.active')).map(btn => btn.dataset.size);
+        const category = $productCategory.value;
+        const price = parseFloat($productPrice.value);
+        const stock = parseInt($productStock.value);
+        const sizes = Array.from(document.querySelectorAll('.size-btn.active')).map(btn => btn.dataset.size);
 
         // Validaciones
         if (!name || !category || isNaN(price) || isNaN(stock) || sizes.length === 0 || price <= 0 || stock < 0) {
-            alert("Por favor, completa todos los campos requeridos y asegúrate de que el precio y stock sean válidos.");
+            alert("Por favor, completa todos los campos requeridos.");
             return;
         }
 
-        // Capturamos las dos imágenes y las guardamos como un array
-        const mainImg = $productImageMain.value.trim();
-        const hoverImg = $productImageHover.value.trim();
-        const images = [mainImg, hoverImg];
+        // Bloqueamos botón para evitar doble clic
+        $btnSaveProduct.disabled = true;
+        $btnSaveProduct.textContent = "Guardando...";
 
-        // Al guardar el objeto producto, usa 'image: images'
-        if (editingProductId) {
-            // Editar
-            const productIndex = products.findIndex(p => p.id === editingProductId);
-            if (productIndex !== -1) {
-                products[productIndex] = { ...products[productIndex], name, category, price, stock, sizes, image: images };
-            }
-        } else {
-            // Crear nuevo
-            const newProduct = {
-                id: Date.now().toString(),
-                name, category, price, stock, sizes, image: images
-            };
-            products.push(newProduct);
+        try {
+            // Capturamos las imágenes que ya están convertidas a Base64 en los inputs ocultos
+            const mainImg = $productImageMain.value; 
+            const hoverImg = $productImageHover.value;
+            const images = [mainImg, hoverImg];
+
+            // Generar ID o usar el existente
+            const productId = editingProductId || db.ref('products').push().key;
+            
+            // Guardar directamente en la Realtime Database
+            await db.ref('products/' + productId).set({
+                id: productId,
+                name,
+                category,
+                price,
+                stock,
+                sizes,
+                image: images
+            });
+
+            closeProductModal();
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            alert("Hubo un problema al guardar en la base de datos.");
+        } finally {
+            $btnSaveProduct.disabled = false;
+            $btnSaveProduct.textContent = "Guardar Producto";
         }
-
-        saveProducts();
-        closeProductModal();
-        renderProducts(document.querySelector('.category-btn.active').dataset.category); // Re-renderizar con filtro actual
     };
 
     /**
@@ -390,16 +415,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Inicialización
     // ------------------------------------------
 
-    // Agregar algunos productos de prueba si localStorage está vacío
-    if (products.length === 0) {
-        products = [
-            { id: '1', name: 'Remera Oversize Tokyo', category: 'remeras', price: 15999, stock: 10, sizes: ['M', 'L', 'XL'], image: '' },
-            { id: '2', name: 'Buzo Canguro Premium', category: 'buzos', price: 34999, stock: 5, sizes: ['L', 'XL', 'XXL'], image: '' },
-            { id: '3', name: 'Campera Bomber Negra', category: 'camperas', price: 49999, stock: 3, sizes: ['M', 'L'], image: '' },
-            { id: '4', name: 'Pantalón Cargo Urbano', category: 'pantalones', price: 29999, stock: 8, sizes: ['M', 'L', 'XL'], image: '' }
-        ];
-        saveProducts();
-    }
-
-    renderProducts(); // Renderizar productos al cargar la página
+    // Escuchar cambios en tiempo real desde Firebase
+    db.ref('products').on('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            // Convertimos el objeto de Firebase en un Array
+            // Usamos Object.values porque Firebase guarda los productos con IDs como llaves
+            products = Object.values(data);
+        } else {
+            // Si la base de datos está vacía, no creamos nada automático
+            products = [];
+        }
+        
+        renderProducts(); 
+    });
 });
