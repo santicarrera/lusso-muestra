@@ -1,0 +1,235 @@
+
+<!-- contraseña de ADMIN luso_admin -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUSSO - Tienda de Ropa Urbana</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">
+                        <img src="/images/logo lusso.jpg" alt="LUSSO LOGO" class="logo-img">
+                    </a>
+                </div>
+                <button class="btn-admin" id="btnAdmin">
+                    <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Admin
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Panel (hidden by default) -->
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <div class="container">
+            <div class="admin-header">
+                <h2>Panel de Administración</h2>
+                <div class="admin-actions">
+                    <button class="btn-primary" id="btnNewProduct">
+                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Nuevo Producto
+                    </button>
+                    <button class="btn-logout" id="btnLogout">
+                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>LUSSO</h2>
+                <p>Panel de Administración</p>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="passwordInput" placeholder="Contraseña" class="input">
+                <button class="btn-primary btn-block" id="btnLogin">Ingresar</button>
+                <button class="btn-secondary btn-block" id="btnCancelLogin">Volver a la tienda</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Form Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Nuevo Producto</h3>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" id="productName" class="input">
+                </div>
+                
+                <div class="form-group">
+                    <label>Categoría *</label>
+                    <select id="productCategory" class="input">
+                        <option value="remeras">Remeras</option>
+                        <option value="buzos">Buzos</option>
+                        <option value="camperas">Camperas</option>
+                        <option value="bermudas">Bermudas</option>
+                        <option value="pantalones">Pantalones</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Precio ($) *</label>
+                    <input type="number" id="productPrice" class="input">
+                </div>
+
+                <div class="form-group">
+                    <label>Talles Disponibles *</label>
+                    <div class="size-buttons" id="sizeButtons">
+                        <button class="size-btn" data-size="M">M</button>
+                        <button class="size-btn" data-size="L">L</button>
+                        <button class="size-btn" data-size="XL">XL</button>
+                        <button class="size-btn" data-size="XXL">XXL</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Stock *</label>
+                    <input type="number" id="productStock" class="input">
+                </div>
+
+                <div class="form-group">
+                    <label>Imagen de Frente (Principal) *</label>
+                    <input type="file" id="productImageFileMain" class="input" accept="image/*" style="margin-bottom: 5px;">
+                    
+                    <label style="margin-top: 10px;">Imagen de Dorso (Hover)</label>
+                    <input type="file" id="productImageFileHover" class="input" accept="image/*">
+                    
+                    <input type="hidden" id="productImageMain">
+                    <input type="hidden" id="productImageHover">
+
+                    <div id="imagePreviewContainer" style="display: none; margin-top: 15px; border: 1px dashed var(--light-gray); padding: 10px; border-radius: 0.5rem;">
+                        <p style="font-size: 0.75rem; color: var(--gray-text); margin-bottom: 5px;">Vista previa (Frente | Dorso):</p>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <img id="imagePreviewMain" src="" style="width: 45%; max-height: 120px; border-radius: 0.25rem; object-fit: cover;">
+                            <img id="imagePreviewHover" src="" style="width: 45%; max-height: 120px; border-radius: 0.25rem; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-primary" id="btnSaveProduct">Guardar</button>
+                    <button class="btn-secondary" id="btnCancelProduct">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="container">
+        <div class="category-filter" id="categoryFilter">
+            <button class="category-btn active" data-category="all">Todo</button>
+            <button class="category-btn" data-category="remeras">Remeras</button>
+            <button class="category-btn" data-category="buzos">Buzos</button>
+            <button class="category-btn" data-category="camperas">Camperas</button>
+            <button class="category-btn" data-category="bermudas">Bermudas</button>
+            <button class="category-btn" data-category="pantalones">Pantalones</button>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="container">
+        <div class="products-grid" id="productsGrid">
+            <!-- Products will be inserted here by JavaScript -->
+        </div>
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <p>No hay productos en esta categoría</p>
+        </div>
+    </div>
+
+    <!-- Location Section -->
+    <div class="location-section">
+        <div class="container">
+            <h2 class="section-title">Visitanos</h2>
+            <div class="location-grid">
+                <div class="location-info">
+                    <div class="info-item">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <div>
+                            <h3>Ubicación</h3>
+                            <p>Paseo Comercial Funes</p>
+                            <p>Terrada y Ruta 60</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg>
+                        <div>
+                            <h3>Seguinos</h3>
+                            <a href="https://instagram.com/lussodress" target="_blank">@lussodress</a>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <h3>Horarios</h3>
+                        <p>Lunes a Sábado</p>
+                        <p>10:00 - 14:00 / 16:00 - 20:00</p>
+                    </div>
+                </div>
+
+                <section id="contacto" class="section">
+                    <div class="container">
+                        <div style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                            
+                            <div style="width: 100%; max-width: 900px; height: 400px; border-radius: 1rem; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid var(--medium-gray);">
+                                <iframe 
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2451.180148927446!2d-68.84834543319067!3d-33.007078948666695!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x967e0b005723a0a7%3A0x5c284c4af6c7bab!2sFunes%20Paseo%20comercial!5e1!3m2!1ses!2sar!4v1768854913653!5m2!1ses!2sar" 
+                                    width="100%" 
+                                    height="100%" 
+                                    style="border:0;" 
+                                    allowfullscreen="" 
+                                    loading="lazy" 
+                                    referrerpolicy="no-referrer-when-downgrade">
+                                </iframe>
+                            </div>
+                            
+                            <a href="http://googleusercontent.com/maps.google.com/4" target="_blank" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; margin-top: 10px;">
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2024 LUSSO - Ropa Urbana</p>
+        </div>
+    </footer>
+
+    <script src="/js/script.js"></script>
+</body>
+</html>
